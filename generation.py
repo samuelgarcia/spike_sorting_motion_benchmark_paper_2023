@@ -248,20 +248,20 @@ def generate_drift_recordings(base_folder=None, probename='Neuronexus-32',
 
 
 ## exhaustive generation of all cases
-# for cells_position in cells_positions:
-#     for cells_rate in cells_rates:
-#         for drift_mode in ['static'] + drift_modes:
-#             generate_drift_recordings(base_folder=base_folder,
-#                                       probename=probename, 
-#                                       drift_mode=drift_mode,
-#                                       cells_position=cells_position,
-#                                       cells_rate=cells_rate,
-#                                       erase=True,
-#                                       n_jobs=-1)
+for cells_position in cells_positions:
+    for cells_rate in cells_rates:
+        for drift_mode in ['static'] + drift_modes:
+            generate_drift_recordings(base_folder=base_folder,
+                                      probename=probename, 
+                                      drift_mode=drift_mode,
+                                      cells_position=cells_position,
+                                      cells_rate=cells_rate,
+                                      erase=True,
+                                      n_jobs=-1)
 
 
 # debug 
 
-generate_drift_recordings(base_folder=base_folder, probename=probename, 
-                         drift_mode='bumps', cells_position='uniform', cells_rate='homogeneous',
-                         erase=True, n_jobs=30)
+# generate_drift_recordings(base_folder=base_folder, probename=probename, 
+#                          drift_mode='bumps', cells_position='uniform', cells_rate='homogeneous',
+#                          erase=True, n_jobs=30)

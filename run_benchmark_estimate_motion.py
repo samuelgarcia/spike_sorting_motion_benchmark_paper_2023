@@ -24,10 +24,7 @@ detect_kwargs = {
     'detect_threshold' : 10,
 
 }
-methods_localize = ['center_of_mass', 'monopolar_triangulation', 'grid_convolution']
-# methods_localize = ['monopolar_triangulation']
-methods_estimation = ['decentralized', 'iterative_template']
-#methods_estimation = ['decentralized', ]
+
 common_localize_kwargs = {
     'ms_before': .5,
     'ms_after': .5,
@@ -128,12 +125,12 @@ def run_all_benchmark_estimation():
                 bench.save_to_folder()
                 
 
-                for localize_method in methods_localize:
+                for localize_method in localize_methods:
                     localize_kwargs = {'method': localize_method}
                     localize_kwargs.update(common_localize_kwargs)
                     localize_kwargs.update(specific_localize_kwargs[localize_method])
 
-                    for motion_method in methods_estimation:
+                    for motion_method in estimation_methods:
 
 
                         benchmark_folder = parent_folder / f'{localize_method}_{motion_method}'
