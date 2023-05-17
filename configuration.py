@@ -20,14 +20,14 @@ if getpass.getuser() == 'samuel.garcia':
     base_folder = Path('/mnt/data/sam/DataSpikeSorting/mearec_drift_v6/')
     # base_folder = Path('/mnt/data/sam/DataSpikeSorting/mearec_drift_v7/')
     si.Kilosort2_5Sorter.set_kilosort2_5_path('/home/samuel.garcia/Documents/SpikeInterface/code_sorters/Kilosort2.5/')
-    si.Kilosort3Sorter.set_kilosort3_path('/home/samuel.garcia/Documents/SpikeInterface/code_sorters/Kilosort3/')
+    # si.Kilosort3Sorter.set_kilosort3_path('/home/samuel.garcia/Documents/SpikeInterface/code_sorters/Kilosort3/')
     tmp_folder = base_folder / 'tmp'
 else:
     # pierre working
     base_folder = Path('/media/cure/Secondary/pierre/softwares/spikeinterface_drift_benchmarks/pierre')
     # TODO
     si.Kilosort2_5Sorter.set_kilosort2_5_path('/media/cure/Secondary/pierre/softwares/Kilosort-2.5/')
-    si.Kilosort3Sorter.set_kilosort3_path('/media/cure/Secondary/pierre/softwares/Kilosort-3.0/')
+    # si.Kilosort3Sorter.set_kilosort3_path('/media/cure/Secondary/pierre/softwares/Kilosort-3.0/')
     tmp_folder = None
 
 

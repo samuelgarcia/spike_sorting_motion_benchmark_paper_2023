@@ -50,7 +50,7 @@ sorter_cases = [
         'sorter_name': 'kilosort2_5',
         'recording': 'corrected_gt',
         'sorter_params':{
-            'docker_image': True,
+            # 'docker_image': True,
             'do_correction': False,
             'skip_kilosort_preprocessing': True,
             'scaleproc': 200,
@@ -63,7 +63,7 @@ sorter_cases = [
         'sorter_name': 'kilosort2_5',
         'recording': 'corrected_estimated',
         'sorter_params':{
-            'docker_image': True,
+            # 'docker_image': True,
             'do_correction': False,
             'skip_kilosort_preprocessing': True,
             'scaleproc': 200,
@@ -175,12 +175,12 @@ def run_all_benchmark_correction():
             correct_motion_kwargs.update(common_correct_motion_kwargs)
             correct_motion_kwargs['spatial_interpolation_method'] = method
             
-            benchmark_folder = base_folder / 'bench_correction' / f'{probename}_{drift_mode}_{cells_positions}_{cells_rates}' / f'{method}'
+            benchmark_folder = base_folder / 'bench_correction' / f'{probename}_{drift_mode}_{cells_position}_{cells_rate}' / f'{method}'
             benchmark_folder.parent.mkdir(exist_ok=True, parents=True)
 
-            #if benchmark_folder.exists():
-            #    print('ALREADY DONE', benchmark_folder)
-            #    continue
+            if benchmark_folder.exists():
+               print('ALREADY DONE', benchmark_folder)
+               continue
 
             bench = BenchmarkMotionCorrectionMearec(drift_mearec_filename, static_mearec_filename,
                                                     gt_motion, estimated_motion, temporal_bins, spatial_bins,
@@ -194,8 +194,8 @@ def run_all_benchmark_correction():
                                                     title=f'{method}',
                                                     parent_benchmark=parent)
             bench.run()
-            # bench.run_sorters()
-            # bench.save_to_folder()
+            bench.run_sorters()
+            bench.save_to_folder()
 
 
             if parent is None:
