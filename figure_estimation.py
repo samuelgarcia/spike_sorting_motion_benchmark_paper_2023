@@ -1,7 +1,12 @@
 from configuration import *
 
+import numpy as np
+
 from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import plot_errors_several_benchmarks, plot_speed_several_benchmarks
 from spikeinterface.sortingcomponents.benchmark.benchmark_tools import _simpleaxis
+from spikeinterface.sortingcomponents.motion_correction import correct_motion_on_peaks
+
+from plotting_tools import removeaxis, label_panel
 
 def load_benchmarks(drift, cells_position, cells_rate):
     from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import BenchmarkMotionEstimationMearec
@@ -77,7 +82,6 @@ def plot_small_summary(benchmarks, axes, scaling_probe=1.5):
     ax.set_xlabel('time (s)')
 
 def plot_firing_rate(benchmark, ax, bin_size=10, color='k', label=None):
-    import numpy as np
     times, units = benchmark.gt_sorting.get_all_spike_trains()[0]
     fr = benchmark.recording.get_sampling_frequency()
     nb_units = len(benchmark.gt_sorting.unit_ids)
@@ -85,13 +89,13 @@ def plot_firing_rate(benchmark, ax, bin_size=10, color='k', label=None):
     x, y = np.histogram(times/fr, bins=time_axis)
     rates = x/(bin_size*nb_units)
     ax.plot(y[1:], rates, c=color, label=label)
-    _simpleaxis(ax)
+    # _simpleaxis(ax)
     #ax.set_xlabel('time (s)')
-    ax.set_ylabel('rate (Hz)')
-    ax.set_xlabel('time (s)')
+    # ax.set_ylabel('rate (Hz)')
+    # ax.set_xlabel('time (s)')
 
 
-colors = {'rigid' : 'C4', 
+drift_colors = {'rigid' : 'C4', 
           'non-rigid' : 'C5', 
           'bumps' : 'C6', 
           'uniform' : 'C7',
@@ -99,24 +103,27 @@ colors = {'rigid' : 'C4',
           'homogeneous' : 'C9',
           'modulated' : 'C10'}
 
+all_keys = [('rigid', 'uniform', 'homogeneous'),
+            #('rigid', 'uniform', 'modulated'),
+            #('rigid', 'bimodal', 'homogeneous'),
+            ('rigid', 'bimodal', 'modulated'),
+            ('non-rigid', 'uniform', 'homogeneous'),
+            #('non-rigid', 'uniform', 'modulated'),
+            ('non-rigid', 'bimodal', 'homogeneous'),
+            #('non-rigid', 'bimodal', 'modulated'),
+            ('bumps', 'uniform', 'homogeneous'),
+            #('bumps', 'uniform', 'modulated'),
+            #('bumps', 'bimodal', 'homogeneous'),
+            ('bumps', 'bimodal', 'modulated')]
+
+
+
 def plot_summary_errors_several_benchmarks(all_benchmarks):
 
     fig = plt.figure(figsize=(15,25))
     gs = fig.add_gridspec(len(all_benchmarks)*3, 4)
     count = 0
     
-    all_keys = [('rigid', 'uniform', 'homogeneous'),
-                #('rigid', 'uniform', 'modulated'),
-                #('rigid', 'bimodal', 'homogeneous'),
-                ('rigid', 'bimodal', 'modulated'),
-                ('non-rigid', 'uniform', 'homogeneous'),
-                #('non-rigid', 'uniform', 'modulated'),
-                ('non-rigid', 'bimodal', 'homogeneous'),
-                #('non-rigid', 'bimodal', 'modulated'),
-                ('bumps', 'uniform', 'homogeneous'),
-                #('bumps', 'uniform', 'modulated'),
-                #('bumps', 'bimodal', 'homogeneous'),
-                ('bumps', 'bimodal', 'modulated')]
     
     for key in all_keys:
 
@@ -126,7 +133,7 @@ def plot_summary_errors_several_benchmarks(all_benchmarks):
         ax_1 = fig.add_subplot(gs[3*count:3*count+3, 0])
         #ax_2 = fig.add_subplot(gs[3*count+2, 0])
         #plot_small_summary(list(benchmarks.values()), axes=[ax_1, ax_2])
-        color = colors[key[0]]
+        color = drift_colors[key[0]]
         ax_1.text(0.5, 0.8, key[0], size=20, rotation=0.,
         ha="center", va="center",
         bbox=dict(boxstyle="round",
@@ -134,7 +141,7 @@ def plot_summary_errors_several_benchmarks(all_benchmarks):
                alpha=0.5)
         )
         
-        color = colors[key[1]]
+        color = drift_colors[key[1]]
         ax_1.text(0.5, 0.5, key[1], size=20, rotation=0.,
         ha="center", va="center",
         bbox=dict(boxstyle="round",
@@ -142,7 +149,7 @@ def plot_summary_errors_several_benchmarks(all_benchmarks):
                )
         )
         
-        color = colors[key[2]]
+        color = drift_colors[key[2]]
         ax_1.text(0.5, 0.2, key[2], size=20, rotation=0.,
         ha="center", va="center",
         bbox=dict(boxstyle="round",
@@ -182,9 +189,116 @@ def plot_summary_errors_several_benchmarks(all_benchmarks):
     return fig
 
 
-
-
 def plot_drift_scenarios(all_benchmarks, scaling_probe=1.25):
+    fig = plt.figure(figsize=(15, 15))
+    n = len(all_keys)
+    ncol = 3
+    nrow = n // ncol
+
+    subfigs = fig.subfigures(nrow, ncol, wspace=0.07, hspace=0.07)
+
+    # gs = fig.add_gridspec(nrow * (4 + 1),  ncol * (4 + 1))
+
+    for i, key in enumerate(all_keys):
+        r = i // ncol
+        c = i % ncol
+        subfig = subfigs[r, c]
+
+        gs = subfig.add_gridspec(5, 5, wspace=0.0, hspace=0.0)
+
+        # print(r, c)
+
+        # ax0 = fig.add_subplot(gs[r*5:r*5 + 4, c*5:c*5 + 4])
+
+        
+        bench = all_benchmarks[key][('monopolar_triangulation', 'decentralized')]
+        fs = bench.recording.get_sampling_frequency()
+
+        ax0 = subfig.add_subplot(gs[0:4, 0:4])
+        ax1 = subfig.add_subplot(gs[4, 0:4], )
+        ax2 = subfig.add_subplot(gs[0:4, 4])
+        ax0.get_shared_x_axes().join(ax1)
+        ax0.get_shared_y_axes().join(ax2)
+
+
+        
+        
+
+        for d in range(0, bench.gt_motion.shape[1], 2):
+            color = drift_colors[key[0]]
+            depth = bench.spatial_bins[d]
+            ax0.plot(bench.temporal_bins, bench.gt_motion[:, i] + depth, color=color, lw=3, alpha=0.8)
+        x = bench.selected_peaks['sample_index']  / fs
+        y = bench.peak_locations['y']
+        ax0.scatter(x, y, color='k', s=1, marker='.', alpha=0.04)
+        ax0.set_xticks([])
+        ax0.set_ylim(-600, 700)
+
+        # ax1 = fig.add_subplot(gs[r*5+4:r*5 + 5, c*5:c*5 + 4])
+        # ax1.margins(0.05)
+        ax1.set_ylim(0, 8)
+
+        color = drift_colors[key[2]]
+        plot_firing_rate(bench, ax1, bin_size=10, color=color, label=None)
+
+        # ax2 = fig.add_subplot(gs[r*5:r*5 + 4, c*5 + 4:c*5 + 5])
+        # ax2.margins(0.05)
+
+
+        color = drift_colors[key[1]]
+        ax2.hist(bench.gt_unit_positions[30,:], bins=30,
+                 orientation='horizontal', color=color, label='uniform positons',
+                 alpha=0.5)
+        ax2.set_xticks([])
+        ax2.set_yticks([])
+
+        removeaxis(ax2)
+        ax0.spines['top'].set_visible(False)
+        ax0.spines['right'].set_visible(False)
+        ax1.spines['right'].set_visible(False)
+        
+
+        ax1.set_xlim(0, 600)
+        ax0.set_xlim(0, 600)
+        ax0.set_ylim(-750, 750)
+        ax2.set_ylim(-750, 750)
+
+        ax0.set_ylabel('Depth [um]')
+        ax1.set_xlabel('Time [s]')
+        ax1.set_ylabel('Rates [Hz]')
+        # subfig.supylabel(' / '.join(key))
+        ax0.set_title(' / '.join(key))
+
+        label_panel(ax0, 'ABCDEF'[i])
+
+
+
+
+        # ax = fig.add_subplot(gs[0, 1])
+        # peak_locations_corrected = correct_motion_on_peaks(
+        #     bench.selected_peaks,
+        #     bench.peak_locations,
+        #     bench.recording.get_times(),
+        #     bench.gt_motion,
+        #     bench.temporal_bins,
+        #     bench.spatial_bins,
+        #     direction="y",
+        # )
+        # x = bench.selected_peaks['sample_index']
+        # y = peak_locations_corrected['y'] / fs
+        # ax.scatter(x, y, color='k', s=1, marker='.', alpha=0.01)
+
+
+
+    # ax.set_ylim(-500, 200)
+
+
+
+
+    return fig
+
+
+def plot_drift_scenarios_OLD(all_benchmarks, scaling_probe=1.25):
 
     fig = plt.figure(figsize=(10, 10))
     gs = fig.add_gridspec(6, 4)
@@ -196,7 +310,7 @@ def plot_drift_scenarios(all_benchmarks, scaling_probe=1.25):
     key_5 = ('bumps', 'uniform', 'homogeneous')
     
     bench = list(all_benchmarks[key_1].values())[0]
-    c = colors['rigid']
+    c = drift_colors['rigid']
 
     ax = fig.add_subplot(gs[0:5, 0:3])
         
@@ -209,7 +323,7 @@ def plot_drift_scenarios(all_benchmarks, scaling_probe=1.25):
         ax.plot(bench.temporal_bins, bench.gt_motion[:, i] + depth, color=c, lw=2, label=label)
     
     bench = list(all_benchmarks[key_2].values())[0]
-    c = colors['non-rigid']
+    c = drift_colors['non-rigid']
         
     for i in range(bench.gt_motion.shape[1]):
         depth = bench.spatial_bins[i]
@@ -220,7 +334,7 @@ def plot_drift_scenarios(all_benchmarks, scaling_probe=1.25):
         ax.plot(bench.temporal_bins, bench.gt_motion[:, i] + depth, color=c, lw=2, label=label)
     
     bench = list(all_benchmarks[key_5].values())[0]
-    c = colors['bumps']
+    c = drift_colors['bumps']
         
     for i in range(bench.gt_motion.shape[1]):
         depth = bench.spatial_bins[i]
@@ -247,21 +361,21 @@ def plot_drift_scenarios(all_benchmarks, scaling_probe=1.25):
     
     bench = list(all_benchmarks[key_2].values())[0]
     ax =  fig.add_subplot(gs[-1, 0:3])
-    c = colors['homogeneous']
+    c = drift_colors['homogeneous']
     plot_firing_rate(bench, ax, color=c, label='homogenous rates')
 
     bench = list(all_benchmarks[key_3].values())[0]
-    c = colors['modulated']
+    c = drift_colors['modulated']
     plot_firing_rate(bench, ax, color=c, label='drift modulated rates')
     
     ax.legend()
     ax = fig.add_subplot(gs[0:5, 3])
     bench = list(all_benchmarks[key_2].values())[0]
-    c = colors['uniform']
+    c = drift_colors['uniform']
     ax.hist(bench.gt_unit_positions[30,:], 30, orientation='horizontal', color=c, label='uniform positons', alpha=0.5)
     
     bench = list(all_benchmarks[key_4].values())[0]
-    c = colors['bimodal']
+    c = drift_colors['bimodal']
     ax.hist(bench.gt_unit_positions[30,:], 30, orientation='horizontal', color=c, label='bimodal positons', alpha=0.5)
     ax.set_yticks([])
     ax.set_xlabel('# neurons')
@@ -272,3 +386,4 @@ def plot_drift_scenarios(all_benchmarks, scaling_probe=1.25):
     ax.legend()
 
     return fig
+
