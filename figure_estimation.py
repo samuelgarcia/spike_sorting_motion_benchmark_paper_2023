@@ -2,9 +2,11 @@ from configuration import *
 
 import numpy as np
 
-from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import plot_errors_several_benchmarks, plot_speed_several_benchmarks
+from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import plot_errors_several_benchmarks, plot_speed_several_benchmarks, plot_error_map_several_benchmarks
 from spikeinterface.sortingcomponents.benchmark.benchmark_tools import _simpleaxis
 from spikeinterface.sortingcomponents.motion_correction import correct_motion_on_peaks
+from spikeinterface.widgets import plot_probe_map
+
 
 from plotting_tools import removeaxis, label_panel
 
@@ -23,7 +25,7 @@ def load_benchmarks(drift, cells_position, cells_rate):
     return benchmarks
 
 
-def plot_figure_individual_motion_benchmark(benchmarks):
+def plot_figure_individual_motion_benchmark_OLD(benchmarks):
     
     fig = plt.figure(figsize=(15,15))
     gs = fig.add_gridspec(4, 6)
@@ -54,6 +56,96 @@ def plot_figure_individual_motion_benchmark(benchmarks):
 
     return fig
 
+def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15), error_lim=20):
+    
+    fig = plt.figure(figsize=figsize)
+
+    gs1 = fig.add_gridspec(2, 5, wspace=0.7, hspace=0.1)
+    gs2 = fig.add_gridspec(2, 5, wspace=0, hspace=0.1)
+
+    ax0 = fig.add_subplot(gs1[0, 0])
+    ax1 = fig.add_subplot(gs2[0, 1])
+    ax2 = fig.add_subplot(gs2[0, 2])
+    ax3 = fig.add_subplot(gs2[0, 3])
+    ax4 = fig.add_subplot(gs1[0, 4])
+
+
+    bench = benchmarks[('monopolar_triangulation', 'decentralized')]
+    fs = bench.recording.get_sampling_frequency()
+    for d in range(0, bench.gt_motion.shape[1], 2):
+        # color = drift_colors[key[0]]
+        color = 'm'
+        depth = bench.spatial_bins[d]
+        ax0.plot(bench.temporal_bins, bench.gt_motion[:, d] + depth, color=color, lw=3, alpha=0.5)
+    x = bench.selected_peaks['sample_index']  / fs
+    y = bench.peak_locations['y']
+
+    ax1.set_ylim(0, error_lim)
+
+    ax0.scatter(x, y, color='k', s=1, marker='.', alpha=0.04)
+    ax0.spines['top'].set_visible(False)
+    ax0.spines['right'].set_visible(False)
+    ax0.spines['left'].set_visible(False)
+    ax0.spines['bottom'].set_visible(False)
+    ax0.set_xticks([])
+    ax0.set_yticks([])
+    ax0.set_ylabel(label)
+
+    plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax1, ax2, ax3], show_legend=False)
+    ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.2), loc='upper right')
+
+    plot_speed_several_benchmarks(list(benchmarks.values()), ax=ax4)
+    ax4.legend(framealpha=1, bbox_to_anchor=(1, 1.2), loc='upper right')
+
+
+    gs3 = fig.add_gridspec(7, 60, wspace=1.1, hspace=0.3)
+    
+    n = len(benchmarks)
+    ncols = 2
+    nrows = n // ncols
+    # axes = []
+    for i, (method, bench) in enumerate(benchmarks.items()):
+        r = i // ncols
+        c = i % ncols
+        ax = fig.add_subplot(gs3[4 + r, c*28:c*28+28])
+
+        channel_positions = bench.recording.get_channel_locations()
+        probe_y_min, probe_y_max = channel_positions[:, 1].min(), channel_positions[:, 1].max()
+        errors = bench.gt_motion - bench.motion
+        if c > 0:
+            ax.set_yticks([])
+        else:
+            ax.set_ylabel('Depth [um]')
+        if r < nrows - 1:
+            ax.set_xticks([])
+        else:
+            ax.set_xlabel('Time [s]')
+
+        im = ax.imshow(
+            np.abs(errors).T,
+            aspect="auto",
+            interpolation="nearest",
+            origin="lower",
+            extent=(bench.temporal_bins[0], bench.temporal_bins[-1], bench.spatial_bins[0], bench.spatial_bins[-1] ),
+        )
+        ax.set_title(' + '.join(method).replace('_', ' '))
+        im.set_clim(0, error_lim)
+    
+    cax = fig.add_subplot(gs3[4:, 59])
+    fig.colorbar(im, cax=cax)
+    cax.set_ylabel('Error [um]')
+
+
+
+        # axes.append(ax)
+    # plot_error_map_several_benchmarks(list(benchmarks.values()), axes=axes) 
+
+    # 
+
+    return fig
+
+
+
 
 
 def plot_small_summary(benchmarks, axes, scaling_probe=1.5):
@@ -61,9 +153,9 @@ def plot_small_summary(benchmarks, axes, scaling_probe=1.5):
     bench = benchmarks[0]
     ax = axes[0]
         
-    for i in range(bench.gt_motion.shape[1]):
-        depth = bench.spatial_bins[i]
-        ax.plot(bench.temporal_bins, bench.gt_motion[:, i] + depth, color='green', lw=4)
+    for d in range(bench.gt_motion.shape[1]):
+        depth = bench.spatial_bins[d]
+        ax.plot(bench.temporal_bins, bench.gt_motion[:, d] + depth, color='green', lw=4)
 
     # ax.set_ylim(ymin, ymax)
     ax.set_xticks([])
@@ -80,6 +172,8 @@ def plot_small_summary(benchmarks, axes, scaling_probe=1.5):
     
     plot_firing_rate(bench, axes[1])
     ax.set_xlabel('time (s)')
+
+
 
 def plot_firing_rate(benchmark, ax, bin_size=10, color='k', label=None):
     times, units = benchmark.gt_sorting.get_all_spike_trains()[0]
@@ -101,7 +195,8 @@ drift_colors = {'rigid' : 'C4',
           'uniform' : 'C7',
           'bimodal' : 'C8',
           'homogeneous' : 'C9',
-          'modulated' : 'C10'}
+          'modulated' : 'C10'
+}
 
 all_keys = [('rigid', 'uniform', 'homogeneous'),
             #('rigid', 'uniform', 'modulated'),
@@ -118,132 +213,115 @@ all_keys = [('rigid', 'uniform', 'homogeneous'),
 
 
 
-def plot_summary_errors_several_benchmarks(all_benchmarks):
 
-    fig = plt.figure(figsize=(15,25))
-    gs = fig.add_gridspec(len(all_benchmarks)*3, 4)
-    count = 0
+def plot_summary_errors_several_benchmarks(all_benchmarks, figsize=(15,25)):
+
+    fig = plt.figure(figsize=figsize)
+    n = len(all_keys)
+    gs1 = fig.add_gridspec(n, 4, wspace=0.7, hspace=0.1)
+    gs2 = fig.add_gridspec(n, 4, wspace=0, hspace=0.1)
+
     
-    
-    for key in all_keys:
+    for i, key in enumerate(all_keys):
+
+        ax0 = fig.add_subplot(gs1[i, 0])
+        ax1 = fig.add_subplot(gs2[i, 1])
+        ax2 = fig.add_subplot(gs2[i, 2])
+        ax3 = fig.add_subplot(gs2[i, 3])
 
         benchmarks = all_benchmarks[key]
-        
-        # print(key)
-        ax_1 = fig.add_subplot(gs[3*count:3*count+3, 0])
-        #ax_2 = fig.add_subplot(gs[3*count+2, 0])
-        #plot_small_summary(list(benchmarks.values()), axes=[ax_1, ax_2])
-        color = drift_colors[key[0]]
-        ax_1.text(0.5, 0.8, key[0], size=20, rotation=0.,
-        ha="center", va="center",
-        bbox=dict(boxstyle="round",
-               fc=color,
-               alpha=0.5)
-        )
-        
-        color = drift_colors[key[1]]
-        ax_1.text(0.5, 0.5, key[1], size=20, rotation=0.,
-        ha="center", va="center",
-        bbox=dict(boxstyle="round",
-               fc=color,alpha=0.5
-               )
-        )
-        
-        color = drift_colors[key[2]]
-        ax_1.text(0.5, 0.2, key[2], size=20, rotation=0.,
-        ha="center", va="center",
-        bbox=dict(boxstyle="round",
-               fc=color,alpha=0.5
-               )
-        )
-        
-        _simpleaxis(ax_1)
-        ax_1.spines['bottom'].set_visible(False)
-        ax_1.spines['left'].set_visible(False)
-        ax_1.set_yticks([])
-        ax_1.set_xticks([])
-        
-        ax_1 = fig.add_subplot(gs[3*count:3*count+3, 1])
-        ax_2 = fig.add_subplot(gs[3*count:3*count+3, 2])
-        ax_3 = fig.add_subplot(gs[3*count:3*count+3, 3])
 
-        if count == 0:
-            show_legend = True
-        else: 
-            show_legend = False
-        plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax_1, ax_2, ax_3], show_legend=show_legend)
-        #ax_2.set_yticks([])
-        #ax_3.set_yticks([])
-        
-        
-        if count < len(all_benchmarks)-1:
-            for ax in [ax_1, ax_2, ax_3]:
+        bench = all_benchmarks[key][('monopolar_triangulation', 'decentralized')]
+        fs = bench.recording.get_sampling_frequency()
+        for d in range(0, bench.gt_motion.shape[1], 2):
+            color = drift_colors[key[0]]
+            depth = bench.spatial_bins[d]
+            ax0.plot(bench.temporal_bins, bench.gt_motion[:, d] + depth, color=color, lw=3, alpha=0.5)
+        x = bench.selected_peaks['sample_index']  / fs
+        y = bench.peak_locations['y']
+
+        ax0.scatter(x, y, color='k', s=1, marker='.', alpha=0.04)
+        ax0.spines['top'].set_visible(False)
+        ax0.spines['right'].set_visible(False)
+        ax0.spines['left'].set_visible(False)
+        ax0.spines['bottom'].set_visible(False)
+        ax0.set_xticks([])
+        ax0.set_yticks([])
+
+
+        plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax1, ax2, ax3], show_legend=False)
+        for ax in (ax1, ax2, ax3):
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.set_yticks([0, 5, 10])
+            ax.grid(axis='y', color='0.2', ls='--', alpha=0.4)
+            if i < n - 1:
                 ax.set_xticks([])
                 ax.set_xlabel('')
-        
-        for ax in [ax_1, ax_2, ax_3]:
-            ax.set_ylim(0, 20)
-        
-        count += 1
+        ax1.set_yticks([0, 5, 10])
 
+        # ax2.set_yticklabels(['', '', ''])
+        # ax3.set_yticklabels(['', '', ''])
+        # ax1.set_yticklabels(['0', '5', '10'])
+
+        if i == 0:
+            ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.1), loc='upper right')
+
+        ax1.set_ylim(0, 13)
+        ax0.set_xlim(0, 600)
+        ax1.set_xlim(0, 600)
+        ax0.set_ylim(-600, 700)
+
+        ax0.set_ylabel(' / '.join(key))
+        label_panel(ax0, 'ABCDEF'[i])
+
+
+        
     return fig
 
 
-def plot_drift_scenarios(all_benchmarks, scaling_probe=1.25):
-    fig = plt.figure(figsize=(15, 15))
+def plot_drift_scenarios(all_benchmarks, figsize=(15, 15)):
+    fig = plt.figure(figsize=figsize)
     n = len(all_keys)
     ncol = 3
     nrow = n // ncol
 
     subfigs = fig.subfigures(nrow, ncol, wspace=0.07, hspace=0.07)
 
-    # gs = fig.add_gridspec(nrow * (4 + 1),  ncol * (4 + 1))
-
     for i, key in enumerate(all_keys):
         r = i // ncol
         c = i % ncol
         subfig = subfigs[r, c]
 
-        gs = subfig.add_gridspec(5, 5, wspace=0.0, hspace=0.0)
-
-        # print(r, c)
-
-        # ax0 = fig.add_subplot(gs[r*5:r*5 + 4, c*5:c*5 + 4])
-
+        gs = subfig.add_gridspec(5, 6, wspace=0.0, hspace=0.0)
         
         bench = all_benchmarks[key][('monopolar_triangulation', 'decentralized')]
         fs = bench.recording.get_sampling_frequency()
 
-        ax0 = subfig.add_subplot(gs[0:4, 0:4])
-        ax1 = subfig.add_subplot(gs[4, 0:4], )
-        ax2 = subfig.add_subplot(gs[0:4, 4])
-        ax0.get_shared_x_axes().join(ax1)
-        ax0.get_shared_y_axes().join(ax2)
-
-
+        ax0 = subfig.add_subplot(gs[0:4, 1:5])
+        ax1 = subfig.add_subplot(gs[4, 1:5], )
+        ax2 = subfig.add_subplot(gs[0:4, 5])
+        ax3 = subfig.add_subplot(gs[0:4, 0])
         
-        
+        ax0.sharex(ax1)
+        ax0.sharey(ax2)
+        ax2.sharey(ax3)
 
         for d in range(0, bench.gt_motion.shape[1], 2):
             color = drift_colors[key[0]]
             depth = bench.spatial_bins[d]
-            ax0.plot(bench.temporal_bins, bench.gt_motion[:, i] + depth, color=color, lw=3, alpha=0.8)
+            ax0.plot(bench.temporal_bins, bench.gt_motion[:, d] + depth, color=color, lw=3, alpha=0.5)
         x = bench.selected_peaks['sample_index']  / fs
         y = bench.peak_locations['y']
         ax0.scatter(x, y, color='k', s=1, marker='.', alpha=0.04)
         ax0.set_xticks([])
-        ax0.set_ylim(-600, 700)
+        
+        ax0.set_yticks([])
 
-        # ax1 = fig.add_subplot(gs[r*5+4:r*5 + 5, c*5:c*5 + 4])
-        # ax1.margins(0.05)
         ax1.set_ylim(0, 8)
 
         color = drift_colors[key[2]]
         plot_firing_rate(bench, ax1, bin_size=10, color=color, label=None)
-
-        # ax2 = fig.add_subplot(gs[r*5:r*5 + 4, c*5 + 4:c*5 + 5])
-        # ax2.margins(0.05)
-
 
         color = drift_colors[key[1]]
         ax2.hist(bench.gt_unit_positions[30,:], bins=30,
@@ -252,138 +330,48 @@ def plot_drift_scenarios(all_benchmarks, scaling_probe=1.25):
         ax2.set_xticks([])
         ax2.set_yticks([])
 
+        plot_probe_map(bench.recording, ax=ax3)
+        ax3.set_xlabel('')
+        ax3.set_ylabel('')
+
+        mr_recording = mr.load_recordings(bench.mearec_filename)
+        for loc in mr_recording.template_locations[::2]:
+            if len(mr_recording.template_locations.shape) == 3:
+                ax3.plot([loc[0, 1], loc[-1, 1]], [loc[0, 2], loc[-1, 2]], alpha=0.6, lw=2)
+            else:
+                ax3.scatter([loc[1]], [loc[2]], alpha=0.7, s=100)
+
         removeaxis(ax2)
         ax0.spines['top'].set_visible(False)
         ax0.spines['right'].set_visible(False)
+        ax0.spines['left'].set_visible(False)
+        ax0.spines['bottom'].set_visible(False)
+
         ax1.spines['right'].set_visible(False)
-        
+        ax1.spines['top'].set_visible(False)
+        ax3.spines['right'].set_visible(False)
+        ax3.spines['top'].set_visible(False)
+        ax3.spines['bottom'].set_visible(False)
+        ax3.set_xticks([])
 
-        ax1.set_xlim(0, 600)
+
+        # ax1.set_xlim(0, 600)
+        ax1.set_ylim(0, 7)
+
         ax0.set_xlim(0, 600)
-        ax0.set_ylim(-750, 750)
-        ax2.set_ylim(-750, 750)
+        ax0.set_ylim(-600, 700)
+        # ax2.set_ylim(-750, 750)
+        # ax3.set_ylim(-750, 750)
 
-        ax0.set_ylabel('Depth [um]')
+        ax3.set_ylabel('Depth [um]')
         ax1.set_xlabel('Time [s]')
         ax1.set_ylabel('Rates [Hz]')
-        # subfig.supylabel(' / '.join(key))
         ax0.set_title(' / '.join(key))
 
         label_panel(ax0, 'ABCDEF'[i])
 
 
 
-
-        # ax = fig.add_subplot(gs[0, 1])
-        # peak_locations_corrected = correct_motion_on_peaks(
-        #     bench.selected_peaks,
-        #     bench.peak_locations,
-        #     bench.recording.get_times(),
-        #     bench.gt_motion,
-        #     bench.temporal_bins,
-        #     bench.spatial_bins,
-        #     direction="y",
-        # )
-        # x = bench.selected_peaks['sample_index']
-        # y = peak_locations_corrected['y'] / fs
-        # ax.scatter(x, y, color='k', s=1, marker='.', alpha=0.01)
-
-
-
-    # ax.set_ylim(-500, 200)
-
-
-
-
     return fig
 
-
-def plot_drift_scenarios_OLD(all_benchmarks, scaling_probe=1.25):
-
-    fig = plt.figure(figsize=(10, 10))
-    gs = fig.add_gridspec(6, 4)
-    #plot_small_summary(benchmarks, axes, scaling_probe=1.5)
-    key_1 = ('rigid', 'uniform', 'homogeneous')
-    key_2 = ('non-rigid', 'uniform', 'homogeneous')
-    key_3 = ('non-rigid', 'uniform', 'modulated')
-    key_4 = ('rigid', 'bimodal', 'homogeneous')
-    key_5 = ('bumps', 'uniform', 'homogeneous')
-    
-    bench = list(all_benchmarks[key_1].values())[0]
-    c = drift_colors['rigid']
-
-    ax = fig.add_subplot(gs[0:5, 0:3])
-        
-    for i in range(bench.gt_motion.shape[1]):
-        depth = bench.spatial_bins[i]
-        if i == 0:
-            label = 'rigid'
-        else:
-            label = None
-        ax.plot(bench.temporal_bins, bench.gt_motion[:, i] + depth, color=c, lw=2, label=label)
-    
-    bench = list(all_benchmarks[key_2].values())[0]
-    c = drift_colors['non-rigid']
-        
-    for i in range(bench.gt_motion.shape[1]):
-        depth = bench.spatial_bins[i]
-        if i == 0:
-            label = 'non-rigid'
-        else:
-            label = None
-        ax.plot(bench.temporal_bins, bench.gt_motion[:, i] + depth, color=c, lw=2, label=label)
-    
-    bench = list(all_benchmarks[key_5].values())[0]
-    c = drift_colors['bumps']
-        
-    for i in range(bench.gt_motion.shape[1]):
-        depth = bench.spatial_bins[i]
-        if i == 0:
-            label = 'bumps'
-        else:
-            label = None
-        ax.plot(bench.temporal_bins, bench.gt_motion[:, i] + depth, color=c, lw=2, label=label)
-    
-    ax.legend()
-    # ax.set_ylim(ymin, ymax)
-    ax.set_xticks([])
-    _simpleaxis(ax)
-    #ax.set_yticks([])
-    #ax.spines['left'].set_visible(False)
-
-    channel_positions = bench.recording.get_channel_locations()
-    probe_y_min, probe_y_max = channel_positions[:, 1].min(), channel_positions[:, 1].max()
-    ax.set_ylim(scaling_probe*probe_y_min, scaling_probe*probe_y_max)
-
-    ax.axhline(probe_y_min, color='k', ls='--', alpha=0.5)
-    ax.axhline(probe_y_max, color='k', ls='--', alpha=0.5)
-    ax.set_ylabel('depth (um)')
-    
-    bench = list(all_benchmarks[key_2].values())[0]
-    ax =  fig.add_subplot(gs[-1, 0:3])
-    c = drift_colors['homogeneous']
-    plot_firing_rate(bench, ax, color=c, label='homogenous rates')
-
-    bench = list(all_benchmarks[key_3].values())[0]
-    c = drift_colors['modulated']
-    plot_firing_rate(bench, ax, color=c, label='drift modulated rates')
-    
-    ax.legend()
-    ax = fig.add_subplot(gs[0:5, 3])
-    bench = list(all_benchmarks[key_2].values())[0]
-    c = drift_colors['uniform']
-    ax.hist(bench.gt_unit_positions[30,:], 30, orientation='horizontal', color=c, label='uniform positons', alpha=0.5)
-    
-    bench = list(all_benchmarks[key_4].values())[0]
-    c = drift_colors['bimodal']
-    ax.hist(bench.gt_unit_positions[30,:], 30, orientation='horizontal', color=c, label='bimodal positons', alpha=0.5)
-    ax.set_yticks([])
-    ax.set_xlabel('# neurons')
-    ax.axhline(probe_y_min, color='k', ls='--', alpha=0.5)
-    ax.axhline(probe_y_max, color='k', ls='--', alpha=0.5)
-    ax.set_ylim(scaling_probe*probe_y_min, scaling_probe*probe_y_max)
-    _simpleaxis(ax)
-    ax.legend()
-
-    return fig
 
