@@ -5,7 +5,9 @@ Here all the material to generate and reproduce for the paper Garcia, Buccino an
   * generate.py : generate recording with different drift model
   * run_benchmark_estimate_motion.py : Part1, benchmark the motion estimation.
   * figure_estimation.py : some matplotlib to generate figures of part 1
-  * run_benchmark_correction_motion.py : Part 2, benchmark the motion correction
+  * run_benchmark_interpolate_motion.py : Part 2, benchmark the motion correction
+
+This 3 notebooks have all the figures included.
 
 
 
