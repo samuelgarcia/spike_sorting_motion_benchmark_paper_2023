@@ -159,7 +159,7 @@ def generate_drift_recordings(base_folder=None, probename='Neuronexus-32',
         drift_dict["slow_drift_waveform"] = "triangluar"
         drift_dict["slow_drift_velocity"] = 30 # um/min
         drift_dict["slow_drift_amplitude"] = 30
-        drift_dict["drift_mode_probename"] = 'non-rigid'
+        drift_dict["drift_mode_probe"] = 'non-rigid'
         drift_dict["non_rigid_gradient_mode"] = 'linear'
         drift_dict["non_rigid_linear_min_factor"] = 0.4
         drift_dicts = [drift_dict]

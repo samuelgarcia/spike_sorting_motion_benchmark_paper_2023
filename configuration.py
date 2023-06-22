@@ -19,6 +19,7 @@ if getpass.getuser() == 'samuel.garcia':
     # sam working
     base_folder = Path('/mnt/data/sam/DataSpikeSorting/mearec_drift_v6/')
     # base_folder = Path('/mnt/data/sam/DataSpikeSorting/mearec_drift_v7/')
+
     si.Kilosort2_5Sorter.set_kilosort2_5_path('/home/samuel.garcia/Documents/SpikeInterface/code_sorters/Kilosort2.5/')
     # si.Kilosort3Sorter.set_kilosort3_path('/home/samuel.garcia/Documents/SpikeInterface/code_sorters/Kilosort3/')
     tmp_folder = base_folder / 'tmp'
@@ -42,6 +43,10 @@ probename = 'Neuropixels-128'
 cells_positions = ['uniform', 'bimodal']
 cells_rates = ['homogeneous', 'modulated']
 drift_modes = ['rigid', 'non-rigid', 'bumps']
+# cells_positions = ['uniform',]
+# cells_rates = ['homogeneous', ]
+# drift_modes = ['rigid',]
+
 
 
 ## parameters for estimation benchmark

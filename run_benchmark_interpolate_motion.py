@@ -13,7 +13,8 @@ from spikeinterface.sortingcomponents.benchmark.benchmark_motion_correction impo
 from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import BenchmarkMotionEstimationMearec
 
 
-job_kwargs = {'chunk_duration' : '1s', 'n_jobs' : -1, 'progress_bar':True}
+# job_kwargs = {'chunk_duration' : '1s', 'n_jobs' : -1, 'progress_bar':True}
+job_kwargs = {'chunk_duration' : '1s', 'n_jobs' : 10, 'progress_bar':True}
 
 common_correct_motion_kwargs = {
         # 'spatial_interpolation_method' : method,
@@ -86,9 +87,9 @@ sorter_cases = [
     },
 ]
 
-#interpolation_methods = ['kriging', 'nearest', 'idw']
-#interpolation_methods = ['nearest', 'idw']
-interpolation_methods = ['kriging', ]
+# interpolation_methods = ['kriging', 'idw', 'nearest', ]
+interpolation_methods = ['nearest',]
+# interpolation_methods = ['kriging', ]
 
 
 bin_duration_s = 2.
@@ -151,8 +152,8 @@ def run_all_benchmark_correction():
         static_mearec_filename = base_folder / 'recordings' / f'{probename}_static_{cells_position}_{cells_rate}.h5'
         drift_mearec_filename = base_folder / 'recordings' / f'{probename}_{drift_mode}_{cells_position}_{cells_rate}.h5'
 
-        print(static_mearec_filename.exists(), static_mearec_filename)
-        print(drift_mearec_filename.exists(), drift_mearec_filename)
+        # print(static_mearec_filename.exists(), static_mearec_filename)
+        # print(drift_mearec_filename.exists(), drift_mearec_filename)
 
         gt_motion, temporal_bins, spatial_bins = compute_gt_motion(drift_mearec_filename, bin_duration_s, win_step_um, win_sigma_um, margin_um)
 
@@ -171,16 +172,17 @@ def run_all_benchmark_correction():
 
         parent = None
         for count, method in enumerate(interpolation_methods):
+            print(method)
             correct_motion_kwargs = {}
             correct_motion_kwargs.update(common_correct_motion_kwargs)
             correct_motion_kwargs['spatial_interpolation_method'] = method
             
-            benchmark_folder = base_folder / 'bench_correction' / f'{probename}_{drift_mode}_{cells_position}_{cells_rate}' / f'{method}'
+            benchmark_folder = base_folder / 'bench_interpolation' / f'{probename}_{drift_mode}_{cells_position}_{cells_rate}' / f'{method}'
             benchmark_folder.parent.mkdir(exist_ok=True, parents=True)
 
-            if benchmark_folder.exists():
-               print('ALREADY DONE', benchmark_folder)
-               continue
+            # if benchmark_folder.exists():
+            #    print('ALREADY DONE', benchmark_folder)
+            #    continue
 
             bench = BenchmarkMotionCorrectionMearec(drift_mearec_filename, static_mearec_filename,
                                                     gt_motion, estimated_motion, temporal_bins, spatial_bins,
@@ -193,10 +195,18 @@ def run_all_benchmark_correction():
                                                     overwrite=True, 
                                                     title=f'{method}',
                                                     parent_benchmark=parent)
-            bench.run()
-            bench.run_sorters()
-            bench.save_to_folder()
-
+            if count == 0:
+                 # 'kriging' : run sorter + waveforms
+                pass
+                bench.extract_waveforms()
+                bench.save_to_folder()
+                # bench.run_sorters()
+                # bench.save_to_folder()
+            else:
+                # 'idw', 'nearest' : run only waveforms
+                bench.extract_waveforms()
+                bench.save_to_folder()
+            
 
             if parent is None:
                 parent = bench

@@ -10,6 +10,17 @@ from spikeinterface.widgets import plot_probe_map
 
 from plotting_tools import removeaxis, label_panel
 
+
+convert_method = {
+    'center_of_mass' : 'CoM',
+    'monopolar_triangulation': 'MonoT',
+    'grid_convolution': 'Grid',
+    'decentralized' : 'Dec',
+    'iterative_template': 'Iter',
+}
+
+drift_convert = {'rigid': 'ZigZag', 'non-rigid': 'ZigZag (non rigid)', 'bumps': 'Bumps'}
+
 def load_benchmarks(drift, cells_position, cells_rate):
     from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import BenchmarkMotionEstimationMearec
     benchmarks = {}
@@ -22,39 +33,23 @@ def load_benchmarks(drift, cells_position, cells_rate):
             benchmark_folder = parent_folder / f'{localize_method}_{motion_method}'
             bench = BenchmarkMotionEstimationMearec.load_from_folder(benchmark_folder)
             benchmarks[key] = bench
+
+            # this fix the title
+            m1, m2 = bench.title.split('+')
+            new_title = convert_method[m1] + ' + ' + convert_method[m2]
+            bench.title = new_title
+
     return benchmarks
 
 
-def plot_figure_individual_motion_benchmark_OLD(benchmarks):
-    
-    fig = plt.figure(figsize=(15,15))
-    gs = fig.add_gridspec(4, 6)
+def drift_title(key):
+    k0, k1, k2 = key
+    k0 = drift_convert[k0]
 
-    ax_1 = fig.add_subplot(gs[0:3, 0])
-    ax_2 = fig.add_subplot(gs[0:3, 1:3])
-    ax_3 = fig.add_subplot(gs[0:3, 3])
-
-    benchmarks[0].plot_true_drift(axes=[ax_1, ax_2, ax_3])
-
-    ax_1 = fig.add_subplot(gs[0, 4:6])
-    ax_2 = fig.add_subplot(gs[1, 4:6])
-    benchmarks[0].plot_motion_corrected_peaks(show_probe=False, axes=[ax_1, ax_2])
-    ax_1.set_ylabel('depth (um)')
-    ax_2.set_ylabel('depth (um)')
-
-    ax_1 = fig.add_subplot(gs[3, 0:2])
-    ax_2 = fig.add_subplot(gs[3, 2:4])
-    ax_3 = fig.add_subplot(gs[3, 4:6])
+    title = '\n'.join((k0, k1.title(), k2.title()))
+    return title
 
 
-    plot_errors_several_benchmarks(benchmarks, axes=[ax_1, ax_2, ax_3])
-
-    ax = fig.add_subplot(gs[2, 4:6])
-    plot_speed_several_benchmarks(benchmarks, ax=ax)
-
-    
-
-    return fig
 
 def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15), error_lim=20):
     
@@ -91,11 +86,26 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
     ax0.set_yticks([])
     ax0.set_ylabel(label)
 
-    plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax1, ax2, ax3], show_legend=False)
-    ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.2), loc='upper right')
+    method_colors = [plt.get_cmap('tab20')(i) for i in range(6)]
+    plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax1, ax2, ax3], show_legend=False, colors=method_colors)
+    ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.2), loc='upper right', ncols=3)
+    for ax in (ax1, ax2, ax3):
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.set_yticks([0, 5, 10])
+        ax.grid(axis='y', color='0.2', ls='--', alpha=0.2)
+        ax.set_ylim(0, 13)
+    # ax1.set_yticks([0, 5, 10])
+    ax2.set_yticklabels(['', '', ''])
+    ax3.set_yticklabels(['', '', ''])
 
-    plot_speed_several_benchmarks(list(benchmarks.values()), ax=ax4)
+
+    ax1.set_ylabel('Error [μm]')
+    plot_speed_several_benchmarks(list(benchmarks.values()), ax=ax4, colors=method_colors)
     ax4.legend(framealpha=1, bbox_to_anchor=(1, 1.2), loc='upper right')
+    ax4.set_ylim(0, 170)
+    ax4.set_yticks([0, 50, 100, 150])
+
 
 
     gs3 = fig.add_gridspec(7, 60, wspace=1.1, hspace=0.3)
@@ -115,7 +125,7 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
         if c > 0:
             ax.set_yticks([])
         else:
-            ax.set_ylabel('Depth [um]')
+            ax.set_ylabel('Depth [μm]')
         if r < nrows - 1:
             ax.set_xticks([])
         else:
@@ -128,13 +138,22 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
             origin="lower",
             extent=(bench.temporal_bins[0], bench.temporal_bins[-1], bench.spatial_bins[0], bench.spatial_bins[-1] ),
         )
-        ax.set_title(' + '.join(method).replace('_', ' '))
+        # ax.set_title(' + '.join(method).replace('_', ' '))
+        ax.set_title(bench.title)
         im.set_clim(0, error_lim)
+
+        if i == 0:
+            label_panel(ax, 'C')
     
     cax = fig.add_subplot(gs3[4:, 59])
     fig.colorbar(im, cax=cax)
-    cax.set_ylabel('Error [um]')
+    cax.set_ylabel('Error [μm]')
 
+
+
+    label_panel(ax1, 'A')
+    label_panel(ax4, 'B')
+    
 
 
         # axes.append(ax)
@@ -171,7 +190,7 @@ def plot_small_summary(benchmarks, axes, scaling_probe=1.5):
     ax.axhline(probe_y_max, color='k', ls='--', alpha=0.5)
     
     plot_firing_rate(bench, axes[1])
-    ax.set_xlabel('time (s)')
+    ax.set_xlabel('Time [s]')
 
 
 
@@ -198,7 +217,8 @@ drift_colors = {'rigid' : 'C4',
           'modulated' : 'C10'
 }
 
-all_keys = [('rigid', 'uniform', 'homogeneous'),
+all_keys = [
+            ('rigid', 'uniform', 'homogeneous'),
             #('rigid', 'uniform', 'modulated'),
             #('rigid', 'bimodal', 'homogeneous'),
             ('rigid', 'bimodal', 'modulated'),
@@ -209,7 +229,28 @@ all_keys = [('rigid', 'uniform', 'homogeneous'),
             ('bumps', 'uniform', 'homogeneous'),
             #('bumps', 'uniform', 'modulated'),
             #('bumps', 'bimodal', 'homogeneous'),
-            ('bumps', 'bimodal', 'modulated')]
+            ('bumps', 'bimodal', 'modulated')
+            ]
+
+"""
+figure supp1
+all_keys = [
+            # ('rigid', 'uniform', 'homogeneous'),
+            ('rigid', 'uniform', 'modulated'),
+            ('rigid', 'bimodal', 'homogeneous'),
+            # ('rigid', 'bimodal', 'modulated'),
+            # ('non-rigid', 'uniform', 'homogeneous'),
+            ('non-rigid', 'uniform', 'modulated'),
+            # ('non-rigid', 'bimodal', 'homogeneous'),
+            ('non-rigid', 'bimodal', 'modulated'),
+            # ('bumps', 'uniform', 'homogeneous'),
+            ('bumps', 'uniform', 'modulated'),
+            ('bumps', 'bimodal', 'homogeneous'),
+            # ('bumps', 'bimodal', 'modulated')
+            ]
+"""
+
+
 
 
 
@@ -248,31 +289,42 @@ def plot_summary_errors_several_benchmarks(all_benchmarks, figsize=(15,25)):
         ax0.set_xticks([])
         ax0.set_yticks([])
 
-
-        plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax1, ax2, ax3], show_legend=False)
+        method_colors = [plt.get_cmap('tab20')(i) for i in range(6)]
+        plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax1, ax2, ax3], show_legend=False, colors=method_colors)
         for ax in (ax1, ax2, ax3):
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
             ax.set_yticks([0, 5, 10])
-            ax.grid(axis='y', color='0.2', ls='--', alpha=0.4)
+            ax.grid(axis='y', color='0.2', ls='--', alpha=0.2)
             if i < n - 1:
                 ax.set_xticks([])
                 ax.set_xlabel('')
+                
+        
+        if i == n - 1:
+            ax1.set_xlabel('Time [s]')
+            ax3.set_xlabel('Depth [μm]')
+
         ax1.set_yticks([0, 5, 10])
-
-        # ax2.set_yticklabels(['', '', ''])
-        # ax3.set_yticklabels(['', '', ''])
-        # ax1.set_yticklabels(['0', '5', '10'])
-
-        if i == 0:
-            ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.1), loc='upper right')
+        ax1.set_ylabel('Error [μm]')
+        ax2.set_yticklabels([])
+        ax3.set_yticklabels([])
 
         ax1.set_ylim(0, 13)
+        ax2.set_ylim(0, 13)
+        ax3.set_ylim(0, 13)
+        
+
+
+        if i == 0:
+            ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.1), loc='upper right', ncols=3)
+
         ax0.set_xlim(0, 600)
         ax1.set_xlim(0, 600)
-        ax0.set_ylim(-600, 700)
 
-        ax0.set_ylabel(' / '.join(key))
+        ax0.set_ylim(-700, 700)
+
+        ax0.set_ylabel(drift_title(key))
         label_panel(ax0, 'ABCDEF'[i])
 
 
@@ -335,11 +387,18 @@ def plot_drift_scenarios(all_benchmarks, figsize=(15, 15)):
         ax3.set_ylabel('')
 
         mr_recording = mr.load_recordings(bench.mearec_filename)
-        for loc in mr_recording.template_locations[::2]:
-            if len(mr_recording.template_locations.shape) == 3:
-                ax3.plot([loc[0, 1], loc[-1, 1]], [loc[0, 2], loc[-1, 2]], alpha=0.6, lw=2)
-            else:
-                ax3.scatter([loc[1]], [loc[2]], alpha=0.7, s=100)
+        # for loc in mr_recording.template_locations[::2]:
+        #     if len(mr_recording.template_locations.shape) == 3:
+        #         ax3.plot([loc[0, 1], loc[-1, 1]], [loc[0, 2], loc[-1, 2]], alpha=0.6, lw=2)
+        #     else:
+        #         ax3.scatter([loc[1]], [loc[2]], alpha=0.7, s=100)
+        locs = np.array(mr_recording.template_locations)
+        if len(locs.shape) == 3:
+            mid = locs.shape[1] // 2
+            ax3.scatter(locs[:, mid, 1], locs[:, mid, 2], s=12, alpha=0.7, color='PaleVioletRed')
+        else:
+            ax3.scatter(locs[:, 1], locs[:, 2], alpha=0.7, s=12, color='PaleVioletRed')
+
 
         removeaxis(ax2)
         ax0.spines['top'].set_visible(False)
@@ -359,14 +418,14 @@ def plot_drift_scenarios(all_benchmarks, figsize=(15, 15)):
         ax1.set_ylim(0, 7)
 
         ax0.set_xlim(0, 600)
-        ax0.set_ylim(-600, 700)
-        # ax2.set_ylim(-750, 750)
-        # ax3.set_ylim(-750, 750)
+        ax0.set_ylim(-750, 700)
+        ax2.set_ylim(-750, 750)
+        ax3.set_ylim(-750, 750)
 
-        ax3.set_ylabel('Depth [um]')
+        ax3.set_ylabel('Depth [μm]')
         ax1.set_xlabel('Time [s]')
         ax1.set_ylabel('Rates [Hz]')
-        ax0.set_title(' / '.join(key))
+        ax0.set_title(drift_title(key))
 
         label_panel(ax0, 'ABCDEF'[i])
 

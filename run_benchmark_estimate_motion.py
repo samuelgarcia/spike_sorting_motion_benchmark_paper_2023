@@ -49,6 +49,7 @@ specific_localize_kwargs = {
 
 
 job_kwargs={'chunk_duration' : '1s', 'n_jobs' : -1, 'progress_bar':True}
+
 common_estimate_motion_kwargs = {
     'bin_duration_s': bin_duration_s,
     'bin_um': 5.,
