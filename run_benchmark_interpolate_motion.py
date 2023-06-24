@@ -87,8 +87,8 @@ sorter_cases = [
     },
 ]
 
-# interpolation_methods = ['kriging', 'idw', 'nearest', ]
-interpolation_methods = ['nearest',]
+interpolation_methods = ['kriging', 'idw', 'nearest', ]
+# interpolation_methods = ['nearest',]
 # interpolation_methods = ['kriging', ]
 
 
@@ -98,11 +98,17 @@ win_step_um = 50.
 win_sigma_um =  150.
 margin_um = 0
 
+waveforms_kwargs = dict(
+    ms_before=1.0,
+    ms_after=3.0,
+    max_spikes_per_unit=700,
+)
+
 
 correction_cases = [
     ('uniform', 'homogeneous', 'rigid'),
-    ('uniform', 'homogeneous', 'non-rigid'),
-    ('uniform', 'homogeneous', 'bumps'),
+    # ('uniform', 'homogeneous', 'non-rigid'),
+    # ('uniform', 'homogeneous', 'bumps'),
 ]
 
 def compute_gt_motion(mearec_filename, bin_duration_s, win_step_um, win_sigma_um, margin_um):
@@ -191,6 +197,7 @@ def run_all_benchmark_correction():
                                                     correct_motion_kwargs=correct_motion_kwargs,
                                                     sorter_cases=sorter_cases,
                                                     folder=benchmark_folder,
+                                                    waveforms_kwargs=waveforms_kwargs,
                                                     job_kwargs=job_kwargs,
                                                     overwrite=True, 
                                                     title=f'{method}',

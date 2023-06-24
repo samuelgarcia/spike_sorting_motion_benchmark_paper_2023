@@ -45,7 +45,7 @@ cells_rates = ['homogeneous', 'modulated']
 drift_modes = ['rigid', 'non-rigid', 'bumps']
 # cells_positions = ['uniform',]
 # cells_rates = ['homogeneous', ]
-# drift_modes = ['rigid',]
+# drift_modes = ['bumps',]
 
 
 
@@ -56,4 +56,5 @@ localize_methods = ['center_of_mass', 'monopolar_triangulation', 'grid_convoluti
 estimation_methods = ['decentralized', 'iterative_template']
 #estimation_methods = ['decentralized', ]
 
+interpolation_methods = ['kriging', 'idw', 'nearest', ]
 

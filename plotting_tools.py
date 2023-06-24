@@ -53,7 +53,7 @@ def panels(layout, fig=None, simple_axis=True, title=None, projection=False):
     return axes, gs
 
 def label_panel(ax, letter, *,
-                offset_left=0.8, offset_up=0.2, prefix='', postfix='.', **font_kwds):
+                offset_left=0.8, offset_up=0.2, prefix='', postfix='', **font_kwds):
     kwds = dict(fontsize=18)
     kwds.update(font_kwds)
     # this mad looking bit of code says that we should put the code offset a certain distance in

@@ -29,7 +29,7 @@ def figure_sorting_accuracies(benchmarks, accuracy_thresh=0.95,
     fig = plt.figure(figsize=figsize)
 
     nrows = len(benchmarks)
-    gs = fig.add_gridspec(nrows + 1, 12, wspace=2.2, hspace=0.25)
+    gs = fig.add_gridspec(nrows + 1, 12, wspace=2.2, hspace=0.5)
 
 
     axes2 = []
@@ -72,6 +72,11 @@ def figure_sorting_accuracies(benchmarks, accuracy_thresh=0.95,
         n = len(comparisons)
         for j, (k , comp) in enumerate(comparisons.items()):
             count = comp.count_units_categories()
+            print('*'*10)
+            print(key)
+            print(k)
+            print(count)
+
             columns = ['num_well_detected', 'num_overmerged', 'num_redundant',
                         'num_false_positive', 'num_bad']
             count_colors = [plt.get_cmap('Accent')(c) for c in range(5)]
@@ -161,6 +166,11 @@ def figure_sorting_accuracies(benchmarks, accuracy_thresh=0.95,
         for ax in (ax0, ax1, ax2):
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
+        
+        letters = ['ABC', 'DEF', 'GHI'][r]
+        label_panel(ax0, letters[0])
+        label_panel(ax1, letters[1])
+        label_panel(ax2, letters[2])
 
         
     gs2 = fig.add_gridspec(24, 12, wspace=2.2, hspace=0.25)

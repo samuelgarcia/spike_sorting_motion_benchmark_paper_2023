@@ -250,7 +250,8 @@ def generate_drift_recordings(base_folder=None, probename='Neuronexus-32',
 ## exhaustive generation of all cases
 for cells_position in cells_positions:
     for cells_rate in cells_rates:
-        for drift_mode in ['static'] + drift_modes:
+        # for drift_mode in ['static'] + drift_modes:
+        for drift_mode in drift_modes:
             generate_drift_recordings(base_folder=base_folder,
                                       probename=probename, 
                                       drift_mode=drift_mode,

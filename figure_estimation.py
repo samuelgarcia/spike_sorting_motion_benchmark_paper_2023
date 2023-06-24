@@ -13,7 +13,7 @@ from plotting_tools import removeaxis, label_panel
 
 convert_method = {
     'center_of_mass' : 'CoM',
-    'monopolar_triangulation': 'MonoT',
+    'monopolar_triangulation': 'Mono',
     'grid_convolution': 'Grid',
     'decentralized' : 'Dec',
     'iterative_template': 'Iter',
@@ -88,7 +88,7 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
 
     method_colors = [plt.get_cmap('tab20')(i) for i in range(6)]
     plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax1, ax2, ax3], show_legend=False, colors=method_colors)
-    ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.2), loc='upper right', ncols=3)
+    ax3.legend(framealpha=1, bbox_to_anchor=(1, 0.9), loc='upper right', ncols=3)
     for ax in (ax1, ax2, ax3):
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -98,6 +98,10 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
     # ax1.set_yticks([0, 5, 10])
     ax2.set_yticklabels(['', '', ''])
     ax3.set_yticklabels(['', '', ''])
+    ax1.set_title("Time error")
+    ax2.set_title("Global error")
+    ax3.set_title("Depth error")
+
 
 
     ax1.set_ylabel('Error [μm]')
@@ -217,7 +221,22 @@ drift_colors = {'rigid' : 'C4',
           'modulated' : 'C10'
 }
 
-all_keys = [
+# all_keys = [
+#             ('rigid', 'uniform', 'homogeneous'),
+            #('rigid', 'uniform', 'modulated'),
+            #('rigid', 'bimodal', 'homogeneous'),
+            # ('rigid', 'bimodal', 'modulated'),
+            # ('non-rigid', 'uniform', 'homogeneous'),
+            #('non-rigid', 'uniform', 'modulated'),
+            # ('non-rigid', 'bimodal', 'homogeneous'),
+            #('non-rigid', 'bimodal', 'modulated'),
+            # ('bumps', 'uniform', 'homogeneous'),
+            #('bumps', 'uniform', 'modulated'),
+            #('bumps', 'bimodal', 'homogeneous'),
+            # ('bumps', 'bimodal', 'modulated')
+            # ]
+
+selected_keys = [
             ('rigid', 'uniform', 'homogeneous'),
             #('rigid', 'uniform', 'modulated'),
             #('rigid', 'bimodal', 'homogeneous'),
@@ -232,9 +251,9 @@ all_keys = [
             ('bumps', 'bimodal', 'modulated')
             ]
 
-"""
-figure supp1
-all_keys = [
+
+# figure supp1
+additional_keys = [
             # ('rigid', 'uniform', 'homogeneous'),
             ('rigid', 'uniform', 'modulated'),
             ('rigid', 'bimodal', 'homogeneous'),
@@ -248,14 +267,14 @@ all_keys = [
             ('bumps', 'bimodal', 'homogeneous'),
             # ('bumps', 'bimodal', 'modulated')
             ]
-"""
 
 
 
 
 
 
-def plot_summary_errors_several_benchmarks(all_benchmarks, figsize=(15,25)):
+
+def plot_summary_errors_several_benchmarks(all_benchmarks, all_keys, figsize=(15,25)):
 
     fig = plt.figure(figsize=figsize)
     n = len(all_keys)
@@ -317,7 +336,12 @@ def plot_summary_errors_several_benchmarks(all_benchmarks, figsize=(15,25)):
 
 
         if i == 0:
-            ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.1), loc='upper right', ncols=3)
+            ax3.legend(framealpha=1, bbox_to_anchor=(1, 1), loc='upper right', ncols=3)
+            
+            ax1.set_title("Time error")
+            ax2.set_title("Global error")
+            ax3.set_title("Depth error")
+
 
         ax0.set_xlim(0, 600)
         ax1.set_xlim(0, 600)
@@ -332,7 +356,7 @@ def plot_summary_errors_several_benchmarks(all_benchmarks, figsize=(15,25)):
     return fig
 
 
-def plot_drift_scenarios(all_benchmarks, figsize=(15, 15)):
+def plot_drift_scenarios(all_benchmarks, all_keys, figsize=(15, 15)):
     fig = plt.figure(figsize=figsize)
     n = len(all_keys)
     ncol = 3
