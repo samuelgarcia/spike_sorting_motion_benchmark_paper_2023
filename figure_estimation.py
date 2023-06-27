@@ -4,7 +4,7 @@ import numpy as np
 
 from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import plot_errors_several_benchmarks, plot_speed_several_benchmarks, plot_error_map_several_benchmarks
 from spikeinterface.sortingcomponents.benchmark.benchmark_tools import _simpleaxis
-from spikeinterface.sortingcomponents.motion_correction import correct_motion_on_peaks
+from spikeinterface.sortingcomponents.motion_interpolation import correct_motion_on_peaks
 from spikeinterface.widgets import plot_probe_map
 
 

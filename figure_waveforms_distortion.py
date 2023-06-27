@@ -1,6 +1,6 @@
 from configuration import *
 
-from spikeinterface.sortingcomponents.benchmark.benchmark_motion_correction import BenchmarkMotionCorrectionMearec
+from spikeinterface.sortingcomponents.benchmark.benchmark_motion_interpolation import BenchmarkMotionInterpolationMearec
 from spikeinterface import compute_sparsity
 
 import MEArec as mr

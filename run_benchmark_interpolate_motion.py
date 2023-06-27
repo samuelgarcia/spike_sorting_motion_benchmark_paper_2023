@@ -106,8 +106,8 @@ waveforms_kwargs = dict(
 
 
 correction_cases = [
-    ('uniform', 'homogeneous', 'rigid'),
-    ('uniform', 'homogeneous', 'non-rigid'),
+    # ('uniform', 'homogeneous', 'rigid'),
+    # ('uniform', 'homogeneous', 'non-rigid'),
     ('uniform', 'homogeneous', 'bumps'),
 ]
 

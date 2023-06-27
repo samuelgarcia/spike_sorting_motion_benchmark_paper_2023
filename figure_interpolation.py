@@ -1,7 +1,7 @@
 from configuration import *
 
-from spikeinterface.sortingcomponents.benchmark.benchmark_motion_correction import BenchmarkMotionCorrectionMearec
-from spikeinterface.sortingcomponents.benchmark.benchmark_motion_correction import plot_distances_to_static
+from spikeinterface.sortingcomponents.benchmark.benchmark_motion_interpolation import BenchmarkMotionInterpolationMearec
+from spikeinterface.sortingcomponents.benchmark.benchmark_motion_interpolation import plot_distances_to_static
 
 from spikeinterface.qualitymetrics import compute_quality_metrics
 
