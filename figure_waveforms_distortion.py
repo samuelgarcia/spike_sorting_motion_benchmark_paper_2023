@@ -96,12 +96,20 @@ def plot_template_and_std(benchmarks, unit_id, axes=None, figsize=(15,10)):
     ax1.plot(static_template_std.T.flatten(), label='static', color=method_color['static'])
     ax1.plot(drifting_template_std.T.flatten(), label='drifting', color=method_color['drifting'], ls='--')
 
+#     one_ms = static_we.nsamples / (static_we.ms_before + static_we.ms_after)
+    one_ms = static_we.sampling_frequency / 1000.
+
+    x = static_we.nsamples*(num_channels-0.5)
+    y = 2.5
+    ax1.plot([x, x + one_ms], [y, y], color='k', lw=3)
+    ax1.text(x +one_ms / 2., y, '1ms', ha='center', va='bottom')
+
     
     # ax0.legend(loc='lower right')
     ax1.set_xticks([])
-    ax1.set_xlabel(f'Times for {num_channels} channel')
-    ax0.set_ylabel('Template amplitude [mad]')
-    ax1.set_ylabel('Template STD\n(normalized by rms)')
+    # ax1.set_xlabel(f'Times for {num_channels} channel')
+    ax0.set_ylabel('Amplitude [s.u.]')
+    ax1.set_ylabel('Normalized STD')
     ax1.set_ylim(0, 3.2)
     ax0.set_yticks([-10, -5, 0])
 
@@ -149,7 +157,7 @@ def plot_distortion_distribution(benchmarks, metric='norm_std', bins=50, axes=No
         
     if with_legend:
         ax1.legend()
-    ax0.set_ylabel('Waveforms std  / std(static)')
+    ax0.set_ylabel('STD ratio')
     ax0.set_xlabel('Depth [μm]')
     ax1.set_yticks([])
 
@@ -177,17 +185,19 @@ def plot_corrected_spike_locations(benchmarks, peaks_locations, axes=None, figsi
     
     peaks, locations = peaks_locations['static']
     axs[0].scatter(peaks['sample_index'] / sr, locations['y'], s=5, marker='o', alpha=0.01, color=method_color['static'])
+
+    axs[0].set_title('Static')
     
     peaks, locations = peaks_locations['drifting']
     axs[1].scatter(peaks['sample_index'] / sr, locations['y'], s=5, marker='o', alpha=0.01, color=method_color['drifting'])
+    axs[1].set_title('Drifting')
 
     for r, (interpolation_method, bench) in enumerate(benchmarks.items()):
         # we = bench.waveforms['corrected_gt']
         # depth = we.load_extension('spike_locations').get_data()['y']
         peaks, locations = peaks_locations[interpolation_method]
         axs[r + 2].scatter(peaks['sample_index'] / sr, locations['y'], s=5, marker='o', alpha=0.01, color=method_color[interpolation_method])
-        
-
+        axs[r + 2].set_title(convert_interpolation[interpolation_method])
     
     for ax in axs:
         ax.set_ylim(-600, 600)

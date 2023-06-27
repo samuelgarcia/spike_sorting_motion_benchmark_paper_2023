@@ -17,8 +17,8 @@ import spikeinterface.full as si
 # if you are not Sam nor Pierre you should add some lines here.
 if getpass.getuser() == 'samuel.garcia':
     # sam working
-    base_folder = Path('/mnt/data/sam/DataSpikeSorting/mearec_drift_v6/')
-    # base_folder = Path('/mnt/data/sam/DataSpikeSorting/mearec_drift_v7/')
+    # base_folder = Path('/mnt/data/sam/DataSpikeSorting/mearec_drift_v6/')
+    base_folder = Path('/mnt/data/sam/DataSpikeSorting/mearec_drift_v7/')
 
     si.Kilosort2_5Sorter.set_kilosort2_5_path('/home/samuel.garcia/Documents/SpikeInterface/code_sorters/Kilosort2.5/')
     # si.Kilosort3Sorter.set_kilosort3_path('/home/samuel.garcia/Documents/SpikeInterface/code_sorters/Kilosort3/')
@@ -57,4 +57,5 @@ estimation_methods = ['decentralized', 'iterative_template']
 #estimation_methods = ['decentralized', ]
 
 interpolation_methods = ['kriging', 'idw', 'nearest', ]
+
 

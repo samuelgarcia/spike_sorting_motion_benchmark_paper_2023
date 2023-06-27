@@ -9,7 +9,7 @@ from configuration import *
 import scipy.interpolate
 
 
-from spikeinterface.sortingcomponents.benchmark.benchmark_motion_correction import BenchmarkMotionCorrectionMearec
+from spikeinterface.sortingcomponents.benchmark.benchmark_motion_interpolation import BenchmarkMotionInterpolationMearec
 from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import BenchmarkMotionEstimationMearec
 
 
@@ -107,8 +107,8 @@ waveforms_kwargs = dict(
 
 correction_cases = [
     ('uniform', 'homogeneous', 'rigid'),
-    # ('uniform', 'homogeneous', 'non-rigid'),
-    # ('uniform', 'homogeneous', 'bumps'),
+    ('uniform', 'homogeneous', 'non-rigid'),
+    ('uniform', 'homogeneous', 'bumps'),
 ]
 
 def compute_gt_motion(mearec_filename, bin_duration_s, win_step_um, win_sigma_um, margin_um):
@@ -190,7 +190,7 @@ def run_all_benchmark_correction():
             #    print('ALREADY DONE', benchmark_folder)
             #    continue
 
-            bench = BenchmarkMotionCorrectionMearec(drift_mearec_filename, static_mearec_filename,
+            bench = BenchmarkMotionInterpolationMearec(drift_mearec_filename, static_mearec_filename,
                                                     gt_motion, estimated_motion, temporal_bins, spatial_bins,
                                                     do_preprocessing=do_preprocessing,
                                                     delete_output_folder=delete_output_folder,
@@ -204,11 +204,10 @@ def run_all_benchmark_correction():
                                                     parent_benchmark=parent)
             if count == 0:
                  # 'kriging' : run sorter + waveforms
-                pass
                 bench.extract_waveforms()
                 bench.save_to_folder()
-                # bench.run_sorters()
-                # bench.save_to_folder()
+                bench.run_sorters()
+                bench.save_to_folder()
             else:
                 # 'idw', 'nearest' : run only waveforms
                 bench.extract_waveforms()
