@@ -147,16 +147,16 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
         im.set_clim(0, error_lim)
 
         if i == 0:
-            label_panel(ax, 'C')
+            label_panel(ax, 'D')
     
     cax = fig.add_subplot(gs3[4:, 59])
     fig.colorbar(im, cax=cax)
     cax.set_ylabel('Error [μm]')
 
 
-
-    label_panel(ax1, 'A')
-    label_panel(ax4, 'B')
+    label_panel(ax0, 'A')
+    label_panel(ax1, 'B')
+    label_panel(ax4, 'C')
     
 
 
