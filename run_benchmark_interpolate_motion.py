@@ -47,6 +47,22 @@ sorter_cases = [
         }
     },
     {
+        'label': 'No drift - Motion correction using KS2.5',
+        'sorter_name': 'kilosort2_5',
+        'recording': 'raw_static',
+        'sorter_params':{
+            #'docker_image': True,
+            'do_correction': True,
+            'verbose': verbose_sorter,
+            'n_jobs':n_jobs_sorter,
+            'skip_kilosort_preprocessing': False,
+            # 'scaleproc': 200,
+            'verbose': verbose_sorter,
+            'n_jobs':n_jobs_sorter,            
+        }
+    },
+
+    {
         'label': 'Drifting - Motion correction using GT',
         'sorter_name': 'kilosort2_5',
         'recording': 'corrected_gt',
@@ -204,15 +220,15 @@ def run_all_benchmark_correction():
                                                     parent_benchmark=parent)
             if count == 0:
                  # 'kriging' : run sorter + waveforms
-                bench.extract_waveforms()
-                bench.save_to_folder()
+                # bench.extract_waveforms()
+                # bench.save_to_folder()
                 bench.run_sorters()
                 bench.save_to_folder()
             else:
                 # 'idw', 'nearest' : run only waveforms
-                bench.extract_waveforms()
-                bench.save_to_folder()
-            
+                # bench.extract_waveforms()
+                # bench.save_to_folder()
+                pass
 
             if parent is None:
                 parent = bench

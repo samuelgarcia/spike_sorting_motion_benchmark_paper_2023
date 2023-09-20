@@ -56,7 +56,7 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
     fig = plt.figure(figsize=figsize)
 
     gs1 = fig.add_gridspec(2, 5, wspace=0.7, hspace=0.1)
-    gs2 = fig.add_gridspec(2, 5, wspace=0, hspace=0.1)
+    gs2 = fig.add_gridspec(2, 5, wspace=0.08, hspace=0.1)
 
     ax0 = fig.add_subplot(gs1[0, 0])
     ax1 = fig.add_subplot(gs2[0, 1])
@@ -88,7 +88,7 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
 
     method_colors = [plt.get_cmap('tab20')(i) for i in range(6)]
     plot_errors_several_benchmarks(list(benchmarks.values()), axes=[ax1, ax2, ax3], show_legend=False, colors=method_colors)
-    ax3.legend(framealpha=1, bbox_to_anchor=(1, 0.9), loc='upper right', ncols=3)
+    ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.45), loc='upper right', ncols=3)
     for ax in (ax1, ax2, ax3):
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
@@ -105,8 +105,8 @@ def plot_figure_individual_motion_benchmark(benchmarks, label='', figsize=(15,15
 
 
     ax1.set_ylabel('Error [μm]')
-    plot_speed_several_benchmarks(list(benchmarks.values()), ax=ax4, colors=method_colors)
-    ax4.legend(framealpha=1, bbox_to_anchor=(1, 1.2), loc='upper right')
+    plot_speed_several_benchmarks(list(benchmarks.values()), detailed=False, ax=ax4, colors=method_colors)
+    # ax4.legend(framealpha=1, bbox_to_anchor=(1, 1.45), loc='upper right')
     ax4.set_ylim(0, 170)
     ax4.set_yticks([0, 50, 100, 150])
 
@@ -279,7 +279,7 @@ def plot_summary_errors_several_benchmarks(all_benchmarks, all_keys, figsize=(15
     fig = plt.figure(figsize=figsize)
     n = len(all_keys)
     gs1 = fig.add_gridspec(n, 4, wspace=0.7, hspace=0.1)
-    gs2 = fig.add_gridspec(n, 4, wspace=0, hspace=0.1)
+    gs2 = fig.add_gridspec(n, 4, wspace=0.06, hspace=0.1)
 
     
     for i, key in enumerate(all_keys):
@@ -336,7 +336,7 @@ def plot_summary_errors_several_benchmarks(all_benchmarks, all_keys, figsize=(15
 
 
         if i == 0:
-            ax3.legend(framealpha=1, bbox_to_anchor=(1, 1), loc='upper right', ncols=3)
+            ax3.legend(framealpha=1, bbox_to_anchor=(1, 1.45), loc='upper right', ncols=3)
             
             ax1.set_title("Time error")
             ax2.set_title("Global error")
@@ -386,10 +386,10 @@ def plot_drift_scenarios(all_benchmarks, all_keys, figsize=(15, 15)):
         for d in range(0, bench.gt_motion.shape[1], 2):
             color = drift_colors[key[0]]
             depth = bench.spatial_bins[d]
-            ax0.plot(bench.temporal_bins, bench.gt_motion[:, d] + depth, color=color, lw=3, alpha=0.5)
+            ax0.plot(bench.temporal_bins, bench.gt_motion[:, d] + depth, color=color, lw=4, alpha=0.8)
         x = bench.selected_peaks['sample_index']  / fs
         y = bench.peak_locations['y']
-        ax0.scatter(x, y, color='k', s=1, marker='.', alpha=0.04)
+        ax0.scatter(x, y, color='k', s=1, marker='.', alpha=0.03)
         ax0.set_xticks([])
         
         ax0.set_yticks([])
@@ -409,6 +409,9 @@ def plot_drift_scenarios(all_benchmarks, all_keys, figsize=(15, 15)):
         plot_probe_map(bench.recording, ax=ax3)
         ax3.set_xlabel('')
         ax3.set_ylabel('')
+        x = bench.recording.get_channel_locations()[:, 0].max() + 40
+        ax3.plot([x, x], [650, 750], color='k')
+        ax3.text(x + 5, 700, '100μm', va='center', ha='left')
 
         mr_recording = mr.load_recordings(bench.mearec_filename)
         # for loc in mr_recording.template_locations[::2]:
@@ -442,9 +445,9 @@ def plot_drift_scenarios(all_benchmarks, all_keys, figsize=(15, 15)):
         ax1.set_ylim(0, 7)
 
         ax0.set_xlim(0, 600)
-        ax0.set_ylim(-750, 700)
-        ax2.set_ylim(-750, 750)
-        ax3.set_ylim(-750, 750)
+        ax0.set_ylim(-750, 760)
+        ax2.set_ylim(-750, 760)
+        ax3.set_ylim(-750, 760)
 
         ax3.set_ylabel('Depth [μm]')
         ax1.set_xlabel('Time [s]')

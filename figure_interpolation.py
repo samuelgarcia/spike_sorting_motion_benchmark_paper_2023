@@ -16,6 +16,7 @@ from figure_estimation import drift_convert
 
 convert_sorter_cases = {
     'No drift - No motion correction': 'Static - No interpolation',
+    'No drift - Motion correction using KS2.5': 'Static - using KS2.5',
     'Drifting - Motion correction using GT': 'Using GT',
     'Drifting - Motion correction using estimated': 'Using Mono+Dec',
     'Drifting - Motion correction using KS2.5': 'Using KS2.5',
@@ -85,7 +86,7 @@ def figure_sorting_accuracies(benchmarks, accuracy_thresh=0.95,
                 x = [j*2 + 1 + c * 0.18]
                 color = count_colors[c]
                 if j == 0:
-                    label = col
+                    label = col.replace('num_', '').replace('_', ' ')
                 else:
                     label = None
 
@@ -140,7 +141,7 @@ def figure_sorting_accuracies(benchmarks, accuracy_thresh=0.95,
         mask = acc_static >= accuracy_thresh
 
         color_values = acc_drift[mask] - acc_static[mask]
-        points = ax2.scatter(unit_depth[mask], snr[mask], c=color_values)
+        points = ax2.scatter(unit_depth[mask], snr[mask], c=color_values, cmap='copper')
         # points.set_clim(0.0, 1.0)
         points.set_clim(-1.0, 0)
         ax2.set_title(label)
