@@ -570,9 +570,9 @@ def benchmarks_to_df(all_benchmarks):
             times_flattened = np.repeat(times, len(depths))
             depths_flattened = np.repeat(depths[:, None], len(times), axis=1).T.flatten()
             df.append(pd.DataFrame({
-                    'drift_signal': [drift_dig] * num_errors,
-                    'depth_distribution': [depth_dist] * num_errors,
-                    'firing_rate': [firing] * num_errors,
+                    'Drift signal': [drift_dig] * num_errors,
+                    'Depth distribution': [depth_dist] * num_errors,
+                    'Firing rate': [firing] * num_errors,
                     'localization_method': [loc_method] * num_errors,
                     'inference_method': [inf_method] * num_errors,
                     'time': times_flattened,
