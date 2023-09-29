@@ -1,7 +1,7 @@
 from configuration import *
 
 import numpy as np
-
+import pandas as pd
 import xarray as xr
 
 from spikeinterface.sortingcomponents.benchmark.benchmark_motion_estimation import plot_errors_several_benchmarks, plot_speed_several_benchmarks, plot_error_map_several_benchmarks
@@ -552,4 +552,37 @@ def export_errors_to_xarray(all_benchmarks):
             all_errors.loc[' '.join(case), ' '.join(method), :, :] = errors
 
     return all_errors
+
+
+
+def benchmarks_to_df(all_benchmarks):
+    df = []
+    for case, benchmarks in all_benchmarks.items():
+        drift_dig, depth_dist, firing = case
+        for method, bench in benchmarks.items():
+            loc_method, inf_method = method
+            error = (bench.gt_motion - bench.motion).flatten()
+            abs_error = np.abs(error)
+            log_error = np.log(1 + abs_error)
+            num_errors = len(error)
+            times = bench.temporal_bins
+            depths = bench.spatial_bins
+            times_flattened = np.repeat(times, len(depths))
+            depths_flattened = np.repeat(depths[:, None], len(times), axis=1).T.flatten()
+            df.append(pd.DataFrame({
+                    'drift_signal': [drift_dig] * num_errors,
+                    'depth_distribution': [depth_dist] * num_errors,
+                    'firing_rate': [firing] * num_errors,
+                    'localization_method': [loc_method] * num_errors,
+                    'inference_method': [inf_method] * num_errors,
+                    'time': times_flattened,
+                    'depth': depths_flattened,
+                    'error': error,
+                    'abs_error': abs_error,
+                    'log_error': log_error}))
+        
+    df = pd.concat(df, axis=0)
+    return df
+
+
 
